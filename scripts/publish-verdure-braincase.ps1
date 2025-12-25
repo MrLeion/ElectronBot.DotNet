@@ -47,6 +47,7 @@ $publishCmd = @(
     '-r', $Runtime,
     '--self-contained', 'true',
     '-p:PublishSingleFile=true',
+    '-p:EnableMsixTooling=true',
     '-p:Platform=' + $Platform,
     '-o', $Output
 ) -join ' '

@@ -18,6 +18,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      - name: Install Windows App SDK workload
+        run: dotnet workload install maui wasi-experimental
+
       - name: Restore solution
         run: dotnet restore ElectronBot.Braincase.sln
 

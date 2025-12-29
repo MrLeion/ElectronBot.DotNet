@@ -1,31 +1,46 @@
-name: Publish Windows Executable
+name: Build Green Exe (Fixed)
 
 on:
   workflow_dispatch: {}
-  push:
-    branches:
-      - dev
 
 jobs:
   build:
     runs-on: windows-latest
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive  # 必须拉取子模块，否则可能缺代码
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x' # 推荐用 8.0 LTS，兼容性最好
 
-      - name: Restore solution
-        run: dotnet restore ElectronBot.Braincase.sln
+      # WinUI 3 编译通常不需要额外安装 workload，直接 restore 即可
+      # 如果报错缺组件，nuget 会自动处理
+      
+      - name: Restore dependencies
+        run: dotnet restore
 
-      - name: Publish Verdure.Braincase (win-x64)
-        run: dotnet publish src/Verdure.Braincase/Verdure.Braincase.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:WindowsPackageType=None -p:Platform=x64 -o ${{github.workspace}}/artifacts/publish/win-x64
+      - name: Publish Unpackaged Exe
+        # 核心修改解释：
+        # -p:WindowsPackageType=None  -> 禁止生成商店包，只生成普通exe
+        # --self-contained true       -> 把几百兆的运行库全部塞进去，免环境运行
+        # -p:PublishSingleFile=false  -> 建议输出成文件夹，兼容性比单文件更好
+        run: |
+          dotnet publish src/ElectronBot.Braincase/ElectronBot.Braincase.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained true `
+          -p:Platform=x64 `
+          -p:WindowsPackageType=None `
+          -p:WindowsAppSDKSelfContained=true `
+          -o ${{github.workspace}}/artifacts/green-exe
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Verdure.Braincase-win-x64
-          path: artifacts/publish/win-x64
+          name: ElectronBot-Green-Version
+          path: artifacts/green-exe

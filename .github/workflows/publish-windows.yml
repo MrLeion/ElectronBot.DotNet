@@ -28,7 +28,7 @@ jobs:
       # 如果报错缺组件，nuget 会自动处理
       
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore src/ElectronBot.Braincase/ElectronBot.Braincase.csproj
 
       - name: Publish Unpackaged Exe
         # 核心修改解释：
